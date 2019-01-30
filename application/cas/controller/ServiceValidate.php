@@ -7,40 +7,51 @@ use think\Session;
 use think\Cookie;
 use think\Request;
 
-class Servicevalidate
+/**
+ * ServiceValidate
+ * 实现CAS协议中的票据验证
+ * @package DingStudio/CAS
+ * @subpackage CAS/ServiceValidate
+ * @author David Ding
+ */
+class ServiceValidate
 {
-    private static $_cuser;
-    private static $_email;
-    private static $_token;
-
-    public function __construct() {
-        self::$_cuser = Session::get('cas_cuser');
-        self::$_email = Session::get('cas_email');
-        self::$_token = Session::get('cas_token');
-    }
-
+    /**
+     * ServiceValidate 外部路由方法
+     * @return string CAS系统的XML认证报文结果
+     */
     public function index()
     {
-        //$this->gen_response('CAS用户','cas@dingstudio.cn','casuser');
-        if (Request::instance()->has('ticket','get')) {
-            $tgt = Request::instance()->get('ticket');
-            $tgt = explode('ST-', $tgt)[1];
+        //$this->gen_response('CAS用户','cas@dingstudio.cn','casuser'); //用于测试TICKET登录
+        if (Request::instance()->has('ticket','get') && Request::instance()->has('service','get')) {
+            $tgt_src = Request::instance()->get('ticket');
+            /*
+            由于phpCAS要求ticket必须为ST-等标准开头，但本人自建的SSO系统使用传统的Token机制。
+            为了兼容标准的phpCAS（Client）组件，在此做特殊处理。将原SSO系统的token均添加了ST-前缀。
+            因此需在此处分割字符串，还原原始token。
+            */
+            $tgt = @explode('ST-', $tgt_src)[1];
+            //将还原后的token携带至原SSO系统尝试拉取用户资料
             $userinfo = file_get_contents('https://passport.dingstudio.cn/api?format=json&action=verify&token='.$tgt.'&reqtime='.time());
             $userinfo = json_decode($userinfo, true);
             if ($userinfo['code'] == 200) {
                 $newtoken = 'ST-'.$userinfo['data']['newtoken'];
                 Session::set('cas_token', $newtoken);
-                $this->gen_response(self::$_cuser,self::$_email,$newtoken);
+                $this->gen_response($userinfo['data']['username'],$userinfo['data']['usermail'],$newtoken);
             } else {
-                $this->show_err('INVALID_TICKET', '票据无效');
+                $this->show_err('INVALID_TICKET', '未能识别出目标&#039;'.$tgt_src.'&#039;票根');
             }
         } else {
-            $this->show_err('INVALID_TICKET', '票据无效');
+            $this->show_err('INVALID_REQUEST', '必须同时提供&#039;service&#039;和&#039;ticket&#039;参数');
         }
     }
 
     /**
-     * 创建会话信息报文
+     * 创建CAS会话信息报文
+     * @param string $user 已认证的用户名
+     * @param string $mail 已认证的用户邮箱
+     * @param string $token 访问用户资料所需令牌
+     * @return string CAS系统的XML认证报文结果
      */
     private function gen_response($user, $mail, $token) {
         header('Content-Type: text/xml; charset=UTF-8');
@@ -56,6 +67,9 @@ class Servicevalidate
 
     /**
      * CAS报错封装
+     * @param string $code 错误特征码
+     * @param string $detail 错误信息详情
+     * @return string CAS系统的XML错误信息返回
      */
     private function show_err($code, $detail) {
         header('Content-Type: text/xml; charset=UTF-8');

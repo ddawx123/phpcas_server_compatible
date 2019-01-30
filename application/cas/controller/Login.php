@@ -7,6 +7,13 @@ use think\Session;
 use think\Cookie;
 use think\Request;
 
+/**
+ * Login
+ * 实现CAS登录请求页面
+ * @package DingStudio/CAS
+ * @subpackage CAS/Login
+ * @author David Ding
+ */
 class Login extends Controller
 {
     private static $_isLogin = false;
@@ -47,6 +54,7 @@ class Login extends Controller
 
     public function index()
     {
+        /*
         if (self::$_isLogin && Request::instance()->has('service','get')) {
             $url = Request::instance()->get('service');
             if (!strpos($url, '?')) {
@@ -54,8 +62,9 @@ class Login extends Controller
             } else {
                 $url = $url.'&ticket='.self::$_token;
             }
-            $this->success('登录成功，正在跳转', $url);
+            $this->success('正在加载', $url);
         }
+        */
 	    return view();
     }
 }
