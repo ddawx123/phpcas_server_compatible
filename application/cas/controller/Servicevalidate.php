@@ -21,7 +21,7 @@ class Servicevalidate
 
     public function index()
     {
-        $this->gen_response('CAS用户','cas@dingstudio.cn','casuser');
+        //$this->gen_response('CAS用户','cas@dingstudio.cn','casuser');
         if (Request::instance()->has('ticket','get')) {
             $tgt = Request::instance()->get('ticket');
             $tgt = explode('ST-', $tgt)[1];
