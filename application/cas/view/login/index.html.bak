@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>CAS●中央认证服务</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://passport.dingstudio.cn/oauth/thirdLogin.js" type="text/javascript"></script>
+</head>
+<body>
+    <script>
+        var loginApp = new DAuthingForm({
+            appid: 1009,
+            secret: 'a212c25f6c240cbe982698c1b1fd712e140cea02'
+        });
+    </script>
+</body>
+</html>
